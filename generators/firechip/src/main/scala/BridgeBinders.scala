@@ -86,6 +86,23 @@ class WithTSIBridgeAndHarnessRAMOverSerialTL extends HarnessBinder({
   }
 })
 
+// DMI
+class WithDMIBridge extends HarnessBinder({
+  case (th: FireSim, port: DMIPort, chipId: Int) => {
+    // This assumes that:
+    // If ExtMem for the target is defined, then FASED bridge will be attached
+    // If FASED bridge is attached, loadmem widget is present
+    
+    // soohyuk: check what happens here
+    printf("DMIBridge Binder\n")
+
+    val hasMainMemory = th.chipParameters(th.p(MultiChipIdx))(ExtMem).isDefined
+    val mainMemoryName = Option.when(hasMainMemory)(MainMemoryConsts.globalName(th.p(MultiChipIdx)))
+    val nDMIAddrBits = port.io.dmi.req.bits.addr.getWidth
+    DMIBridge(th.harnessBinderClock, port.io, mainMemoryName, th.harnessBinderReset.asBool, nDMIAddrBits)(th.p)
+  }
+})
+
 class WithNICBridge extends HarnessBinder({
   case (th: FireSim, port: NICPort, chipId: Int) => {
     NICBridge(port.io.clock, port.io.bits)(th.p)
@@ -139,6 +156,7 @@ class WithSuccessBridge extends HarnessBinder({
 // Shorthand to register all of the provided bridges above
 class WithDefaultFireSimBridges extends Config(
   new WithTSIBridgeAndHarnessRAMOverSerialTL ++
+  new WithDMIBridge ++
   new WithNICBridge ++
   new WithUARTBridge ++
   new WithBlockDeviceBridge ++
@@ -152,6 +170,7 @@ class WithDefaultFireSimBridges extends Config(
 // Shorthand to register all of the provided mmio-only bridges above
 class WithDefaultMMIOOnlyFireSimBridges extends Config(
   new WithTSIBridgeAndHarnessRAMOverSerialTL ++
+  new WithDMIBridge ++
   new WithUARTBridge ++
   new WithBlockDeviceBridge ++
   new WithFASEDBridge ++
