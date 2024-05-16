@@ -92,9 +92,6 @@ class WithDMIBridge extends HarnessBinder({
     // This assumes that:
     // If ExtMem for the target is defined, then FASED bridge will be attached
     // If FASED bridge is attached, loadmem widget is present
-    
-    // soohyuk: check what happens here
-    printf("DMIBridge Binder\n")
 
     val hasMainMemory = th.chipParameters(th.p(MultiChipIdx))(ExtMem).isDefined
     val mainMemoryName = Option.when(hasMainMemory)(MainMemoryConsts.globalName(th.p(MultiChipIdx)))

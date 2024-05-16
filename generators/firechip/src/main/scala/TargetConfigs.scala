@@ -11,7 +11,7 @@ import freechips.rocketchip.tilelink._
 import freechips.rocketchip.rocket.DCacheParams
 import freechips.rocketchip.subsystem._
 import freechips.rocketchip.devices.tilelink.{BootROMLocated, BootROMParams}
-import freechips.rocketchip.devices.debug.{DebugModuleParams, DebugModuleKey}
+import freechips.rocketchip.devices.debug.{DefaultDebugModuleParams, DebugModuleKey}
 import freechips.rocketchip.diplomacy.{LazyModule, AsynchronousCrossing}
 import testchipip.iceblk.{BlockDeviceKey, BlockDeviceConfig}
 import testchipip.cosim.{TracePortKey, TracePortParams}
@@ -37,6 +37,11 @@ class WithBootROM extends Config((site, here, up) => {
     }
     up(BootROMLocated(x), site).map(_.copy(contentFileName = bootROMPath))
   }
+})
+
+class WithDebugModule extends Config((site, here, up) => {
+  // also disable clock-gating
+  case DebugModuleKey => Some(DefaultDebugModuleParams(site(XLen)).copy(clockGate = false))
 })
 
 // Disables clock-gating; doesn't play nice with our FAME-1 pass
@@ -91,6 +96,8 @@ class WithMinimalFireSimDesignTweaks extends Config(
   new WithBootROM ++
   // Required: Existing FAME-1 transform cannot handle black-box clock gates
   new WithoutClockGating ++
+  // Optional: Do not support debug module w. JTAG until FIRRTL stops emitting @(posedge ~clock)
+  new chipyard.config.WithNoDebug ++
   // Required*: Removes thousands of assertions that would be synthesized (* pending PriorityMux bugfix)
   new WithoutTLMonitors
 )
@@ -106,8 +113,8 @@ class WithFireSimDesignTweaks extends Config(
   new testchipip.serdes.WithSerialTLWidth(4) ++
   // Required*: Scale default baud rate with periphery bus frequency
   new chipyard.config.WithUART(
-    baudrate=BigInt(3686400L), 
-    txEntries=256, rxEntries=256) ++        // FireSim requires a larger UART FIFO buffer, 
+    baudrate=BigInt(3686400L),
+    txEntries=256, rxEntries=256) ++        // FireSim requires a larger UART FIFO buffer,
   new chipyard.config.WithNoUART() ++       // so we overwrite the default one
   // Optional: Adds IO to attach tracerV bridges
   new chipyard.config.WithTraceIO ++
@@ -274,6 +281,7 @@ class FireSimSmallSystemConfig extends Config(
   new chipyard.RocketConfig)
 
 class FireSimDmiRocketConfig extends Config(
+  new WithDebugModule ++
   new WithDefaultFireSimBridges ++
   new WithDefaultMemModel ++
   new WithFireSimConfigTweaks ++
