@@ -86,7 +86,7 @@ CHECK_SUBMODULES_COMMAND = echo "Checking all submodules in generators/ are init
 
 SCALA_EXT = scala
 VLOG_EXT = sv v
-CHIPYARD_SOURCE_DIRS = $(addprefix $(base_dir)/,generators sims/firesim/sim/src sims/firesim/sim/firesim-lib sims/firesim/sim/midas fpga/fpga-shells fpga/src tools/stage tools/stage-chisel3)
+CHIPYARD_SOURCE_DIRS = $(addprefix $(base_dir)/,generators sims/firesim/sim/src sims/firesim/sim/firesim-lib sims/firesim/sim/midas fpga/fpga-shells fpga/src tools/stage tools/stage-chisel3 tools/firrtl2)
 CHIPYARD_SCALA_SOURCES = $(call lookup_srcs_by_multiple_type,$(CHIPYARD_SOURCE_DIRS),$(SCALA_EXT))
 CHIPYARD_VLOG_SOURCES = $(call lookup_srcs_by_multiple_type,$(CHIPYARD_SOURCE_DIRS),$(VLOG_EXT))
 TAPEOUT_SOURCE_DIRS = $(addprefix $(base_dir)/,tools/tapeout)
@@ -123,7 +123,7 @@ $(TAPEOUT_CLASSPATH) &: $(TAPEOUT_SCALA_SOURCES) $(SCALA_BUILDTOOL_DEPS) $(TAPEO
 # verilog generation pipeline
 #########################################################################################
 # AG: must re-elaborate if cva6 sources have changed... otherwise just run firrtl compile
-$(FIRRTL_FILE) $(ANNO_FILE) $(CHISEL_LOG_FILE) &: $(GENERATOR_CLASSPATH) $(EXTRA_GENERATOR_REQS)
+$(FIRRTL_FILE) $(SFC_FIRRTL_FILE) $(ANNO_FILE) $(CHISEL_LOG_FILE) &: $(GENERATOR_CLASSPATH) $(EXTRA_GENERATOR_REQS)
 	mkdir -p $(build_dir)
 	(set -o pipefail && $(call run_jar_scala_main,$(GENERATOR_CLASSPATH),$(GENERATOR_PACKAGE).Generator,\
 		--target-dir $(build_dir) \
@@ -156,7 +156,7 @@ $(FINAL_ANNO_FILE) $(MFC_EXTRA_ANNO_FILE) &: $(ANNO_FILE)
 	jq -s '[.[][]]' $(ANNO_FILE) $(MFC_EXTRA_ANNO_FILE) > $(FINAL_ANNO_FILE)
 
 .PHONY: firrtl
-firrtl: $(FIRRTL_FILE) $(FINAL_ANNO_FILE)
+firrtl: $(FIRRTL_FILE) $(SFC_FIRRTL_FILE) $(FINAL_ANNO_FILE)
 
 #########################################################################################
 # create verilog files rules and variables

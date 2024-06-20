@@ -152,6 +152,7 @@ TAPEOUT_CLASSPATH ?= $(CLASSPATH_CACHE)/tapeout.jar
 
 # chisel generated outputs
 FIRRTL_FILE ?= $(build_dir)/$(long_name).fir
+SFC_FIRRTL_FILE ?= $(build_dir)/$(long_name).sfc.fir
 ANNO_FILE   ?= $(build_dir)/$(long_name).anno.json
 CHISEL_LOG_FILE ?= $(build_dir)/$(long_name).chisel.log
 FIRTOOL_LOG_FILE ?= $(build_dir)/$(long_name).firtool.log
