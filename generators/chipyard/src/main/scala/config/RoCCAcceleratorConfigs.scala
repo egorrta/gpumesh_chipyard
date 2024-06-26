@@ -1,7 +1,6 @@
 package chipyard
 
 import org.chipsalliance.cde.config.{Config}
-import freechips.rocketchip.diplomacy.{AsynchronousCrossing}
 
 // ------------------------------
 // Configs with RoCC Accelerators
@@ -66,4 +65,9 @@ class ReRoCCManyGemminiConfig extends Config(
   new gemmini.LeanGemminiConfig ++                              // rerocc tile1 is gemmini
   new gemmini.LeanGemminiConfig ++                              // rerocc tile0 is gemmini
   new freechips.rocketchip.subsystem.WithNBigCores(4) ++        // 4 rocket cores
+  new chipyard.config.AbstractConfig)
+
+class ZstdCompressorRocketConfig extends Config(
+  new compressacc.WithZstdCompressor ++
+  new freechips.rocketchip.subsystem.WithNBigCores(1) ++
   new chipyard.config.AbstractConfig)
