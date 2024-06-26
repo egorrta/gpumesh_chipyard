@@ -175,12 +175,15 @@ function get_symbol_value() {
 TOHOST=$(get_symbol_value tohost $BINARY)
 FROMHOST=$(get_symbol_value fromhost $BINARY)
 
+# assumes that only memory region is at 0x80000000. this might break with more regions (and/or at different locations)
+DEFAULT_MEM_START_ADDR=0x80000000
+MEM_DUMP=mem.${DEFAULT_MEM_START_ADDR}.bin
 echo "Compiling memory to elf"
-ls -alh mem.0x80000000.bin
-riscv64-unknown-elf-objcopy -I binary -O elf64-littleriscv mem.0x80000000.bin $RAWMEM_ELF
-rm -rf mem.0x80000000.bin
+ls -alh $MEM_DUMP
+riscv64-unknown-elf-objcopy -I binary -O elf64-littleriscv $MEM_DUMP $RAWMEM_ELF
+rm -rf $MEM_DUMP
 
-riscv64-unknown-elf-ld -Tdata=0x80000000 -nmagic --defsym tohost=0x$TOHOST --defsym fromhost=0x$FROMHOST -o $LOADMEM_ELF $RAWMEM_ELF
+riscv64-unknown-elf-ld -Tdata=$DEFAULT_MEM_START_ADDR -nmagic --defsym tohost=0x$TOHOST --defsym fromhost=0x$FROMHOST -o $LOADMEM_ELF $RAWMEM_ELF
 rm -rf $RAWMEM_ELF
 
 if [[ -z "$DTB" && -z "$DTS" ]] ; then
