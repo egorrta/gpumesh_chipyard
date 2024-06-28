@@ -2,45 +2,49 @@
 
 set -e
 
-usage() {
-    echo "Usage: $0 [OPTIONS]"
-    echo ""
-    echo "Misc Options"
-    echo "  --help -h  : Display this message"
-    echo "  -o <out>   : Output directory to store the checkpoint in. [default <elf>.<pc>.<insn>.<insns>.<type>.loadarch]"
-    echo "  -v         : Verbose"
-    echo ""
-    echo "Required Options"
-    echo "  -b <elf>   : Binary to run in spike"
-    echo ""
-    echo "Options Group (choose one)"
-    echo "  -p <pc>    : PC to take checkpoint at [default 0x80000000]"
-    echo "  -t <insn>  : Instruction (in hex) to take checkpoint at [default is to use none]"
-    echo "  -i <insns> : Instructions after PC to take checkpoint at [default 0]"
-    echo ""
-    echo "Mutually Exclusive Option Groups (each group is mutually exclusive with one another)"
-    echo "  Group: Use Spike default DTS with modifications (can choose multiple)"
-    echo "    -n <n>     : Number of harts [default 1]"
-    echo "    -m <isa>   : ISA to pass to spike for checkpoint generation [default rv64gc]"
-    echo "    -r <mem>   : Memory regions to pass to spike. Passed to spike's '-m' flag. [default starting at 0x80000000 with 256MiB]"
-    echo "  Group: Use custom DTS (choose one)"
-    echo "    -d <dtb>   : DTB file to use. Passed to spike's '--dtb' flag. [default is to use none]"
-    echo "    -s <dts>   : DTS file to use. Converted to a DTB then passed to spike's '--dtb' flag. [default is to use none]"
-    exit "$1"
-}
+# assumes that only memory region is at 0x80000000. this might break with more regions (and/or at different locations)
+DEFAULT_MEM_START_ADDR=0x80000000
 
 NHARTS=1
 BINARY=""
-PC="0x80000000"
+PC="$DEFAULT_MEM_START_ADDR"
 INSN=
 INSNS=0
 ISA="rv64gc"
 OUTPATH=""
 MEMOVERRIDE=""
 VERBOSE=0
-DTB=""
-DTS=""
+DTB=
+DTS=
 TYPE="defaultspikedts"
+
+usage() {
+    echo "Usage: $0 [OPTIONS]"
+    echo ""
+    echo "Misc Options"
+    echo "  --help -h  : Display this message"
+    echo "  -o <out>   : Output directory to store the checkpoint in. [default <elf>.<pc>.<insn>.<insns>.<dtstype>.loadarch]"
+    echo "  -v         : Verbose"
+    echo ""
+    echo "Required Options"
+    echo "  -b <elf>   : Binary to run in spike"
+    echo ""
+    echo "Options Group (choose one)"
+    echo "  -p <pc>    : PC to take checkpoint at [default $PC]"
+    echo "  -t <insn>  : Instruction (in hex) to take checkpoint at [default is to use ${INSN+none}]"
+    echo "  -i <insns> : Instructions after PC to take checkpoint at [default $INSNS]"
+    echo ""
+    echo "Mutually Exclusive Option Groups (each group is mutually exclusive with one another)"
+    echo "  Group: Use Spike default DTS with modifications (can choose multiple)"
+    echo "    -n <n>     : Number of harts [default $NHARTS]"
+    echo "    -m <isa>   : ISA to pass to spike for checkpoint generation [default $ISA]"
+    echo "    -r <mem>   : Memory regions to pass to spike. Passed to spike's '-m' flag. [default starting at $DEFAULT_MEM_START_ADDR with 256MiB]"
+    echo "  Group: Use custom DTS (choose one)"
+    echo "    -d <dtb>   : DTB file to use. Passed to spike's '--dtb' flag. [default is to use ${DTB+none}]"
+    echo "    -s <dts>   : DTS file to use. Converted to a DTB then passed to spike's '--dtb' flag. [default is to use ${DTS+none}]"
+    exit "$1"
+}
+
 while [ "$1" != "" ];
 do
     case $1 in
@@ -110,7 +114,7 @@ elif [ ! -z "$DTB" ]; then
     SPIKEFLAGS+=" --dtb=$DTB"
 else
     if [ -z "$MEMOVERRIDE" ] ; then
-	BASEMEM="$((0x80000000)):$((0x10000000))"
+	BASEMEM="$(($DEFAULT_MEM_START_ADDR)):$((0x10000000))"
     else
 	BASEMEM=$MEMOVERRIDE
     fi
@@ -193,8 +197,6 @@ function get_symbol_value() {
 TOHOST=$(get_symbol_value tohost $BINARY)
 FROMHOST=$(get_symbol_value fromhost $BINARY)
 
-# assumes that only memory region is at 0x80000000. this might break with more regions (and/or at different locations)
-DEFAULT_MEM_START_ADDR=0x80000000
 MEM_DUMP=mem.${DEFAULT_MEM_START_ADDR}.bin
 echo "Compiling memory to elf"
 du -sh $MEM_DUMP
