@@ -31,7 +31,7 @@ usage() {
     echo ""
     echo "Options Group (choose one)"
     echo "  -p <pc>    : PC to take checkpoint at [default $PC]"
-    echo "  -t <insn>  : Instruction (in hex) to take checkpoint at [default is to use ${INSN+none}]"
+    echo "  -t <insn>  : Instruction (in hex) to take checkpoint at [default is to use ${INSN:-none}]"
     echo "  -i <insns> : Instructions after PC to take checkpoint at [default $INSNS]"
     echo ""
     echo "Mutually Exclusive Option Groups (each group is mutually exclusive with one another)"
@@ -40,8 +40,8 @@ usage() {
     echo "    -m <isa>   : ISA to pass to spike for checkpoint generation [default $ISA]"
     echo "    -r <mem>   : Memory regions to pass to spike. Passed to spike's '-m' flag. [default starting at $DEFAULT_MEM_START_ADDR with 256MiB]"
     echo "  Group: Use custom DTS (choose one)"
-    echo "    -d <dtb>   : DTB file to use. Passed to spike's '--dtb' flag. [default is to use ${DTB+none}]"
-    echo "    -s <dts>   : DTS file to use. Converted to a DTB then passed to spike's '--dtb' flag. [default is to use ${DTS+none}]"
+    echo "    -d <dtb>   : DTB file to use. Passed to spike's '--dtb' flag. [default is to use ${DTB:-none}]"
+    echo "    -s <dts>   : DTS file to use. Converted to a DTB then passed to spike's '--dtb' flag. [default is to use ${DTS:-none}]"
     exit "$1"
 }
 
@@ -98,7 +98,7 @@ fi
 BASENAME=$(basename -- $BINARY)
 
 if [ -z "$OUTPATH" ] ; then
-    OUTPATH=$BASENAME.$PC.${INSN+unused}.$INSNS.$TYPE.loadarch
+    OUTPATH=$BASENAME.$PC.${INSN:-unused}.$INSNS.$TYPE.loadarch
 fi
 
 echo "Generating loadarch directory $OUTPATH"
