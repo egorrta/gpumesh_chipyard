@@ -110,7 +110,8 @@ CMDS_FILE=$OUTPATH/cmds_tmp.txt
 SPIKECMD_FILE=$OUTPATH/spikecmd.sh
 
 echo "Generating state capture spike interactive commands in $CMDS_FILE"
-echo "until pc 0 $PC" >> $CMDS_FILE
+echo "until insn 0 0x8013" >> $CMDS_FILE
+#echo "until pc 0 $PC" >> $CMDS_FILE
 echo "rs $INSNS" >> $CMDS_FILE
 echo "dump" >> $CMDS_FILE
 for (( h=0; h<$NHARTS; h++ ))

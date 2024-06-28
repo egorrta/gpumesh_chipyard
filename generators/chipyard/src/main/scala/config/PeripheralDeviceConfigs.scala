@@ -61,6 +61,7 @@ class LBWIFRocketConfig extends Config(
 
 // DOC include start: DmiRocket
 class dmiRocketConfig extends Config(
+  new freechips.rocketchip.subsystem.WithExtMemSize(BigInt(2) << 30) ++
   new chipyard.harness.WithSerialTLTiedOff ++                    // don't attach anything to serial-tl
   new chipyard.config.WithDMIDTM ++                              // have debug module expose a clocked DMI port
   new freechips.rocketchip.subsystem.WithNBigCores(1) ++
