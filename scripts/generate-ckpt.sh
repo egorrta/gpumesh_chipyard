@@ -5,26 +5,34 @@ set -e
 usage() {
     echo "Usage: $0 [OPTIONS]"
     echo ""
-    echo "Options"
+    echo "Misc Options"
     echo "  --help -h  : Display this message"
-    echo "  -b <elf>   : Binary to run in spike"
-    echo "  -p <pc>    : PC to take checkpoint at [default 0x80000000]"
-    echo "  -i <insns> : Instructions after PC to take checkpoint at [default 0]"
-    echo "  -o <out>   : Output directory to store the checkpoint in. [default <elf>.<randomnum>.loadarch]"
+    echo "  -o <out>   : Output directory to store the checkpoint in. [default <elf>.<pc>.<insn>.<insns>.<type>.loadarch]"
     echo "  -v         : Verbose"
     echo ""
-    echo "  -n <n>     : Number of harts [default 1]"
-    echo "  -m <isa>   : ISA to pass to spike for checkpoint generation [default rv64gc]"
-    echo "  -r <mem>   : Memory regions to pass to spike. Passed to spike's '-m' flag. [default starting at 0x80000000 with 256MiB]"
+    echo "Required Options"
+    echo "  -b <elf>   : Binary to run in spike"
     echo ""
-    echo "  -d <dtb>   : DTB file to use. Passed to spike's '--dtb' flag. [default is to use none]"
-    echo "  -s <dts>   : DTS file to use. Converted to a DTB then passed to spike's '--dtb' flag. [default is to use none]"
+    echo "Options Group (choose one)"
+    echo "  -p <pc>    : PC to take checkpoint at [default 0x80000000]"
+    echo "  -t <insn>  : Instruction (in hex) to take checkpoint at [default is to use none]"
+    echo "  -i <insns> : Instructions after PC to take checkpoint at [default 0]"
+    echo ""
+    echo "Mutually Exclusive Option Groups (each group is mutually exclusive with one another)"
+    echo "  Group: Use Spike default DTS with modifications"
+    echo "    -n <n>     : Number of harts [default 1]"
+    echo "    -m <isa>   : ISA to pass to spike for checkpoint generation [default rv64gc]"
+    echo "    -r <mem>   : Memory regions to pass to spike. Passed to spike's '-m' flag. [default starting at 0x80000000 with 256MiB]"
+    echo "  Group: Use custom DTS"
+    echo "    -d <dtb>   : DTB file to use. Passed to spike's '--dtb' flag. [default is to use none]"
+    echo "    -s <dts>   : DTS file to use. Converted to a DTB then passed to spike's '--dtb' flag. [default is to use none]"
     exit "$1"
 }
 
 NHARTS=1
 BINARY=""
 PC="0x80000000"
+INSN=""
 INSNS=0
 ISA="rv64gc"
 OUTPATH=""
@@ -32,6 +40,7 @@ MEMOVERRIDE=""
 VERBOSE=0
 DTB=""
 DTS=""
+TYPE="defaultspikedts"
 while [ "$1" != "" ];
 do
     case $1 in
@@ -49,6 +58,9 @@ do
 	-i )
 	    shift
 	    INSNS=$1 ;;
+	-t )
+	    shift
+	    INSN=$1 ;;
         -m )
             shift
             ISA=$1 ;;
@@ -62,9 +74,11 @@ do
             VERBOSE=1 ;;
 	-d )
 	    shift
+	    TYPE="customdts"
 	    DTB=$1 ;;
 	-s )
 	    shift
+	    TYPE="customdts"
 	    DTS=$1 ;;
 	* )
 	    error "Invalid option $1"
@@ -80,7 +94,7 @@ fi
 BASENAME=$(basename -- $BINARY)
 
 if [ -z "$OUTPATH" ] ; then
-    OUTPATH=$BASENAME.$((RANDOM)).loadarch
+    OUTPATH=$BASENAME.$PC.$INSN.$INSNS.$TYPE.loadarch
 fi
 
 echo "Generating loadarch directory $OUTPATH"
@@ -110,8 +124,11 @@ CMDS_FILE=$OUTPATH/cmds_tmp.txt
 SPIKECMD_FILE=$OUTPATH/spikecmd.sh
 
 echo "Generating state capture spike interactive commands in $CMDS_FILE"
-echo "until insn 0 0x8013" >> $CMDS_FILE
-#echo "until pc 0 $PC" >> $CMDS_FILE
+if [ ! -z "$INSN" ]; then
+    echo "until insn 0 $INSN" >> $CMDS_FILE
+else
+    echo "until pc 0 $PC" >> $CMDS_FILE
+fi
 echo "rs $INSNS" >> $CMDS_FILE
 echo "dump" >> $CMDS_FILE
 for (( h=0; h<$NHARTS; h++ ))
@@ -180,7 +197,7 @@ FROMHOST=$(get_symbol_value fromhost $BINARY)
 DEFAULT_MEM_START_ADDR=0x80000000
 MEM_DUMP=mem.${DEFAULT_MEM_START_ADDR}.bin
 echo "Compiling memory to elf"
-ls -alh $MEM_DUMP
+du -sh $MEM_DUMP
 riscv64-unknown-elf-objcopy -I binary -O elf64-littleriscv $MEM_DUMP $RAWMEM_ELF
 rm -rf $MEM_DUMP
 
