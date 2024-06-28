@@ -32,7 +32,7 @@ usage() {
 NHARTS=1
 BINARY=""
 PC="0x80000000"
-INSN=""
+INSN=
 INSNS=0
 ISA="rv64gc"
 OUTPATH=""
@@ -94,7 +94,7 @@ fi
 BASENAME=$(basename -- $BINARY)
 
 if [ -z "$OUTPATH" ] ; then
-    OUTPATH=$BASENAME.$PC.$INSN.$INSNS.$TYPE.loadarch
+    OUTPATH=$BASENAME.$PC.${INSN+unused}.$INSNS.$TYPE.loadarch
 fi
 
 echo "Generating loadarch directory $OUTPATH"
