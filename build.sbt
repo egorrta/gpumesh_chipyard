@@ -311,3 +311,8 @@ lazy val fpga_shells = (project in file("./fpga/fpga-shells"))
 lazy val fpga_platforms = (project in file("./fpga"))
   .dependsOn(chipyard, fpga_shells)
   .settings(commonSettings)
+
+lazy val gpumesh = (project in file("generators/gpumesh"))
+  .dependsOn(rocketchip, constellation)
+  .settings(libraryDependencies ++= rocketLibDeps.value)
+  .settings(commonSettings)
