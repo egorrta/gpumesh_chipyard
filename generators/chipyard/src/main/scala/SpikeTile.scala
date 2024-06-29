@@ -16,7 +16,9 @@ import freechips.rocketchip.util._
 import freechips.rocketchip.tile._
 import freechips.rocketchip.prci._
 
-case class SpikeCoreParams() extends CoreParams {
+case class SpikeCoreParams(
+  nPMPs: Int = 16
+) extends CoreParams {
   val useVM = true
   val useHypervisor = false
   val useSupervisor = true
@@ -33,7 +35,6 @@ case class SpikeCoreParams() extends CoreParams {
   val nLocalInterrupts = 0
   val useNMI = false
   val nPTECacheEntries = 0
-  val nPMPs = 16
   val pmpGranularity = 4
   val nBreakpoints = 0
   val useBPWatch = false

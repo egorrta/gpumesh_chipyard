@@ -17,6 +17,7 @@ class dmiSpikeConfig extends Config(
 
 // Avoids polling on the UART registers
 class SpikeFastUARTConfig extends Config(
+  new chipyard.config.WithNPMPs(0) ++
   new freechips.rocketchip.subsystem.WithExtMemSize(BigInt(2) << 30) ++
   new chipyard.WithNSpikeCores(1) ++
   new chipyard.config.WithUART(txEntries=128, rxEntries=128) ++   // Spike sim requires a larger UART FIFO buffer,
