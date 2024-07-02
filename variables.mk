@@ -138,6 +138,18 @@ ifeq ($(SUB_PROJECT),constellation)
 	TOP               ?= NoC
 endif
 
+ifeq ($(SUB_PROJECT),gpumesh)
+	SBT_PROJECT       ?= chipyard
+	MODEL             ?= TestHarness
+	VLOG_MODEL        ?= $(MODEL)
+	MODEL_PACKAGE     ?= gpumesh.test
+	CONFIG            ?= TestConfig00
+	CONFIG_PACKAGE    ?= gpumesh.test
+	GENERATOR_PACKAGE ?= chipyard
+	TB                ?= TestDriver
+	TOP               ?= NoC
+endif
+
 
 #########################################################################################
 # path to rocket-chip and testchipip
